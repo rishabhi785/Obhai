@@ -1,14 +1,35 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import os
+import logging
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-BOT_TOKEN = "8309249310:AAFTxV4I7dDqUlmldGY3UGw07E8meqSq0I8"
-FRONTEND_URL = "https://row-vert.vercel.app/"  # Apna hosted frontend URL
+# Zeabur environment variables se config
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+BACKEND_URL = os.getenv("BACKEND_URL", "https://your-replit-project.username.repl.co")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://row-vert.vercel.app/")
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[InlineKeyboardButton("Verify Device", url=FRONTEND_URL)]]
+    user_id = update.effective_user.id
+    frontend_with_params = f"{FRONTEND_URL}?user_id={user_id}"
+    
+    keyboard = [[InlineKeyboardButton("Verify Device", url=frontend_with_params)]]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Click below to verify your device:", reply_markup=reply_markup)
+    
+    await update.message.reply_text(
+        "Welcome! Please verify your device:",
+        reply_markup=reply_markup
+    )
 
-app = ApplicationBuilder().token(BOT_TOKEN).build()
-app.add_handler(CommandHandler("start", start))
-app.run_polling()
+def main():
+    application = Application.builder().token(BOT_TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()
