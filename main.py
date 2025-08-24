@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 # Zeabur environment variables se config
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BACKEND_URL = os.getenv("BACKEND_URL", "https://9d4f4c9d-ffeb-441c-8677-be836689e54d-00-2c2givkv2clmi.pike.replit.dev")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://row-vert.vercel.app/")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://row-vert.vercel.app")
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
