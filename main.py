@@ -16,7 +16,7 @@ GROUP_LINK = "https://t.me/viralam"
 CHANNEL_ID = -1002729077216
 GROUP_ID = -1002879269738
 SUPPORT_USERNAME = "@zerixem"
-WEBAPP_URL = "https://veryfyhtml.netlify.app/"
+WEBAPP_URL = "https://row-vert.vercel.app"
 BACKEND_URL = "https://9d4f4c9d-ffeb-441c-8677-be836689e54d-00-2c2givkv2clmi.pike.replit.dev"
 ADMIN_ID = "6736711885"  # Your admin chat ID
 
