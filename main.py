@@ -10,7 +10,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKe
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # Bot configuration
-BOT_TOKEN = "8050193229:AAFfRAytczD85MtOV9_bxzBk305gR7kc2NM"
+BOT_TOKEN = "8309249310:AAFTxV4I7dDqUlmldGY3UGw07E8meqSq0I8"
 CHANNEL_LINK = "https://t.me/freepromochannels"
 GROUP_LINK = "https://t.me/viralam"
 CHANNEL_ID = -1002729077216
