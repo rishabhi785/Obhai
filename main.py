@@ -12,9 +12,9 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 # Bot configuration
 BOT_TOKEN = "8050193229:AAFfRAytczD85MtOV9_bxzBk305gR7kc2NM"
 CHANNEL_LINK = "https://t.me/freepromochannels"
-GROUP_LINK = "https://t.me/promomogroup"
+GROUP_LINK = "https://t.me/viralam"
 CHANNEL_ID = -1002729077216
-GROUP_ID = -1002534343509
+GROUP_ID = -1002879269738
 SUPPORT_USERNAME = "@zerixem"
 WEBAPP_URL = "https://row-vert.vercel.app"
 BACKEND_URL = "https://9d4f4c9d-ffeb-441c-8677-be836689e54d-00-2c2givkv2clmi.pike.replit.dev"
