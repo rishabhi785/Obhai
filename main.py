@@ -16,7 +16,7 @@ GROUP_LINK = "https://t.me/viralam"
 CHANNEL_ID = -1002729077216
 GROUP_ID = -1002879269738
 SUPPORT_USERNAME = "@zerixem"
-WEBAPP_URL = "https://row-vert.vercel.app"
+WEBAPP_URL = "https://veryfyhtml.netlify.app/"
 BACKEND_URL = "https://9d4f4c9d-ffeb-441c-8677-be836689e54d-00-2c2givkv2clmi.pike.replit.dev"
 ADMIN_ID = "6736711885"  # Your admin chat ID
 
@@ -103,7 +103,7 @@ def extract_channel_id_from_link(link):
     """Extract channel username from Telegram link"""
     patterns = [
         r't\.me/([a-zA-Z0-9_]+)',
-        r'telegram\.me/([a-zA-Z0d9_]+)',
+        r'telegram\.me/([a-zA-Z0-9_]+)',  # Fixed: 0d9 -> 0-9
         r'@([a-zA-Z0-9_]+)'
     ]
     
@@ -334,7 +334,7 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def show_delayed_main_menu(chat_id: int, username: str, context: ContextTypes.DEFAULT_TYPE):
     """Show main menu after delay without showing loading message"""
     try:
-        await asyncio.sleep(8)
+        await asyncio.sleep(3)  # Reduced from 8 to 3 seconds
 
         if chat_id == int(ADMIN_ID):
             keyboard = [
@@ -407,23 +407,20 @@ async def claim_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         if is_member:
             users_data[user_id]["joined_channels"] = True
-            users_data[user_id]["verified"] = True
             save_users_data(users_data)
             
             # Create webapp URL with user_id parameter
             webapp_url_with_params = f"{WEBAPP_URL}?user_id={user_id}"
-            webapp_button = InlineKeyboardButton("✅ Verify", web_app=WebAppInfo(url=webapp_url_with_params))
+            webapp_button = InlineKeyboardButton("✅ Verify Device", web_app=WebAppInfo(url=webapp_url_with_params))
             keyboard = [[webapp_button]]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             await query.edit_message_text(
-                text=f"*✅ Thanks {username}! Now click 'Verify' button below to complete device verification.*",
+                text=f"*✅ Thanks {username}! Now click 'Verify Device' button below to complete device verification.*",
                 reply_markup=reply_markup,
                 parse_mode="Markdown"
             )
             
-            # Don't show main menu automatically - wait for web app verification
-            # asyncio.create_task(show_delayed_main_menu(query.message.chat_id, username, context))
         else:
             # Recreate the same join buttons as in start
             keyboard = []
@@ -463,7 +460,7 @@ async def claim_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
-# Web app data handler from original code
+# Web app data handler - MODIFIED FOR BETTER ERROR HANDLING
 async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle web app data when user completes verification"""
     print(f"Web app data received: {update.web_app_data.data}")
@@ -514,18 +511,61 @@ async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             
     except json.JSONDecodeError:
         print("Failed to parse web app data as JSON")
-        error_text = "*❌ Verification error. Please try again using /start*"
-        await context.bot.send_message(chat_id=chat_id, text=error_text, parse_mode="Markdown")
+        # Try to handle as simple string data
+        if "success" in update.web_app_data.data.lower():
+            # Mark user as verified
+            if user_id not in users_data:
+                users_data[user_id] = {
+                    "balance": 0,
+                    "referrals": 0,
+                    "last_bonus": None,
+                    "joined_channels": True,
+                    "verified": True,
+                    "wallet_number": None
+                }
+            else:
+                users_data[user_id]["verified"] = True
+                users_data[user_id]["joined_channels"] = True
+
+            save_users_data(users_data)
+            
+            success_text = f"*✅ DEVICE VERIFICATION SUCCESSFUL!*\n\n*Welcome {username}!*\n\n*Your device has been verified successfully.*"
+            await context.bot.send_message(chat_id=chat_id, text=success_text, parse_mode="Markdown")
+            await show_delayed_main_menu(chat_id, username, context)
+        else:
+            error_text = "*❌ Verification error. Please try again using /start*"
+            await context.bot.send_message(chat_id=chat_id, text=error_text, parse_mode="Markdown")
     except Exception as e:
         print(f"Error processing web app data: {e}")
         error_text = "*❌ Verification error. Please try again using /start*"
         await context.bot.send_message(chat_id=chat_id, text=error_text, parse_mode="Markdown")
 
-# ... (rest of the code remains the same as your original bot.py)
-# All the admin functions, message handlers, callback handlers remain unchanged
+# ADD ALL THE REMAINING FUNCTIONS FROM YOUR ORIGINAL BOT.PY HERE
+# This includes: handle_message, handle_bonus, handle_withdraw_request, 
+# handle_wallet_link, callback_query_handler, and all admin functions
 
-# The rest of your bot.py code continues here with all the existing functions
-# Only the start, claim_callback, and web_app_data_handler functions have been modified
+# Placeholder for the rest of your functions - you need to copy them from your original bot.py
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Your existing handle_message function
+    pass
+
+async def handle_bonus(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Your existing handle_bonus function
+    pass
+
+async def handle_withdraw_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Your existing handle_withdraw_request function
+    pass
+
+async def handle_wallet_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Your existing handle_wallet_link function
+    pass
+
+async def callback_query_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Your existing callback_query_handler function
+    pass
+
+# Add all your admin functions here as well...
 
 def main():
     print("Bot is starting...")
