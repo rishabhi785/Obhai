@@ -147,6 +147,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
         save_users_data(users_data)
 
+    # Check if user is already verified
+    if users_data[user_id].get("verified", False):
+        await show_main_menu(update, context)
+        return
+
     # Create join buttons
     keyboard = []
     keyboard.append([InlineKeyboardButton("📢 Join Channel", url=CHANNEL_LINK)])
@@ -163,6 +168,45 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 *After joining, click ✅ I Have Joined*"""
 
     await update.message.reply_text(text, reply_markup=reply_markup, parse_mode="Markdown")
+
+async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show main menu to user"""
+    try:
+        user_id = str(update.effective_user.id)
+        username = update.effective_user.first_name or "User"
+        
+        if user_id == ADMIN_ID:
+            keyboard = [
+                ["💰 BALANCE", "📤 REFERAL LINK"],
+                ["🎁 BONUS", "💸 WITHDRAW"],
+                ["🏦 LINK WALLET", "🔧 ADMIN PANEL"]
+            ]
+        else:
+            keyboard = [
+                ["💰 BALANCE", "📤 REFERAL LINK"],
+                ["🎁 BONUS", "💸 WITHDRAW"],
+                ["🏦 LINK WALLET"]
+            ]
+        
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        menu_text = f"""*🏠 MAIN MENU*
+
+*Welcome {username}!*
+
+Choose an option below:"""
+
+        if hasattr(update, 'message'):
+            await update.message.reply_text(menu_text, reply_markup=reply_markup, parse_mode="Markdown")
+        else:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=menu_text,
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
+            )
+
+    except Exception as e:
+        print(f"Error showing main menu: {e}")
 
 async def claim_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -233,94 +277,35 @@ Please join both and try again.""",
         )
 
 async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle web app verification result"""
+    """Handle web app verification result - SIMPLIFIED VERSION"""
     user_id = str(update.effective_user.id)
     username = update.effective_user.first_name or "User"
     chat_id = update.effective_chat.id
 
     print(f"Web app data received from user {user_id}")
+    print(f"Raw data: {update.web_app_data.data}")
 
     try:
-        # Try to parse JSON data
-        web_data = json.loads(update.web_app_data.data)
-        print(f"Parsed web data: {web_data}")
-        
-        if web_data.get('status') == 'success':
-            # Mark user as verified
-            users_data[user_id]["verified"] = True
-            save_users_data(users_data)
-            
-            success_text = f"""*✅ DEVICE VERIFICATION SUCCESSFUL!*
-
-*Welcome {username}!* 
-Your device has been verified successfully.
-
-You can now access all features of the bot!"""
-            
-            await context.bot.send_message(chat_id=chat_id, text=success_text, parse_mode="Markdown")
-            await show_main_menu(chat_id, username, context)
-            
-        else:
-            error_msg = web_data.get('message', 'Verification failed')
-            error_text = f"""*❌ VERIFICATION FAILED*
-
-*Reason:* {error_msg}
-
-Please try again using /start"""
-            await context.bot.send_message(chat_id=chat_id, text=error_text, parse_mode="Markdown")
-            
-    except json.JSONDecodeError:
-        # If not JSON, assume success for now
+        # Mark user as verified regardless of web app data
+        # Backend will handle the actual verification and send messages
         users_data[user_id]["verified"] = True
         save_users_data(users_data)
         
-        success_text = f"""*✅ DEVICE VERIFICATION SUCCESSFUL!*
-
-*Welcome {username}!* 
-Your device has been verified successfully.
-
-You can now access all features of the bot!"""
+        # Just show a waiting message - backend will send the actual result
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="*🔄 Verification in progress... Backend is processing your device verification.*",
+            parse_mode="Markdown"
+        )
         
-        await context.bot.send_message(chat_id=chat_id, text=success_text, parse_mode="Markdown")
-        await show_main_menu(chat_id, username, context)
+        # Show main menu after a short delay
+        await asyncio.sleep(2)
+        await show_main_menu(update, context)
         
     except Exception as e:
         print(f"Error in web app handler: {e}")
         error_text = "*❌ Verification error. Please try again using /start*"
         await context.bot.send_message(chat_id=chat_id, text=error_text, parse_mode="Markdown")
-
-async def show_main_menu(chat_id: int, username: str, context: ContextTypes.DEFAULT_TYPE):
-    """Show main menu to user"""
-    try:
-        if str(chat_id) == ADMIN_ID:
-            keyboard = [
-                ["💰 BALANCE", "📤 REFERAL LINK"],
-                ["🎁 BONUS", "💸 WITHDRAW"],
-                ["🏦 LINK WALLET", "🔧 ADMIN PANEL"]
-            ]
-        else:
-            keyboard = [
-                ["💰 BALANCE", "📤 REFERAL LINK"],
-                ["🎁 BONUS", "💸 WITHDRAW"],
-                ["🏦 LINK WALLET"]
-            ]
-        
-        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-        menu_text = f"""*🏠 MAIN MENU*
-
-*Welcome {username}!*
-
-Choose an option below:"""
-
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text=menu_text,
-            reply_markup=reply_markup,
-            parse_mode="Markdown"
-        )
-
-    except Exception as e:
-        print(f"Error showing main menu: {e}")
 
 # Basic message handler
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -356,6 +341,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif message_text == "🔧 ADMIN PANEL" and user_id == ADMIN_ID:
         await update.message.reply_text("*🔧 Admin panel coming soon!*", parse_mode="Markdown")
+
+    elif message_text == "/start":
+        await start(update, context)
 
     else:
         await update.message.reply_text("*❌ Unknown command. Use the menu buttons.*", parse_mode="Markdown")
